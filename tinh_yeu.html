@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máy Tạo Thiệp Trái Tim</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #050505; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; }
+        .container { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 20px; width: 100%; max-width: 360px; border: 1px solid #ff2d55; backdrop-filter: blur(10px); box-shadow: 0 0 30px rgba(255, 45, 85, 0.2); }
+        h2 { color: #ff2d55; text-align: center; margin-top: 0; font-size: 22px; }
+        label { font-size: 13px; color: #ffb6c1; display: block; margin-top: 15px; font-weight: bold; }
+        select, textarea, button { width: 100%; padding: 12px; border-radius: 12px; border: none; margin-top: 8px; font-size: 15px; box-sizing: border-box; outline: none; }
+        select, textarea { background: #222; color: white; border: 1px solid #444; }
+        textarea { height: 80px; resize: none; }
+        .color-picker { display: flex; justify-content: space-between; margin-top: 10px; }
+        .color-dot { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.3s; }
+        .color-dot.active { border-color: white; transform: scale(1.15); box-shadow: 0 0 10px white; }
+        .btn-main { background: linear-gradient(45deg, #ff2d55, #ff512f); color: white; font-weight: bold; margin-top: 25px; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 45, 85, 0.4); }
+        .btn-main:active { transform: scale(0.96); }
+        .note { font-size: 11px; color: #888; text-align: center; margin-top: 15px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Tạo Quà Tình Yêu ❤️</h2>
+        
+        <label>1. Chọn chữ cái đại diện:</label>
+        <select id="charSelect"></select>
+
+        <label>2. Nhập lời nhắn gửi người ấy:</label>
+        <textarea id="msgInput" placeholder="Ví dụ: T gửi lời yêu thương này đến cậu..."></textarea>
+
+        <label>3. Chọn màu sắc chủ đạo:</label>
+        <div class="color-picker" id="colorPicker"></div>
+
+        <button class="btn-main" onclick="exportLoveCard()">TẢI THIỆP HOẠT ẢNH (.html) 💌</button>
+        
+        <div class="note">
+            Lưu ý: Sau khi tải về, hãy gửi file .html này cho người ấy và bảo họ mở bằng <b>Chrome</b> hoặc <b>Zalo (chọn mở bằng trình duyệt)</b> để thấy hiệu ứng trái tim đập.
+        </div>
+    </div>
+
+    <script>
+        // Khởi tạo bảng chữ cái
+        const charSelect = document.getElementById('charSelect');
+        for(let i=65; i<=90; i++) {
+            let c = String.fromCharCode(i);
+            let opt = document.createElement('option');
+            opt.value = c; opt.text = "Chữ cái: " + c;
+            if(c === 'T') opt.selected = true;
+            charSelect.appendChild(opt);
+        }
+
+        // Khởi tạo bảng màu
+        const colors = ['#ff2d55', '#ff69b4', '#8a2be2', '#00ffff', '#ffffff'];
+        let selectedColor = colors[0];
+        const picker = document.getElementById('colorPicker');
+
+        colors.forEach(hex => {
+            let dot = document.createElement('div');
+            dot.className = 'color-dot' + (hex === selectedColor ? ' active' : '');
+            dot.style.background = hex;
+            dot.onclick = () => {
+                document.querySelectorAll('.color-dot').forEach(el => el.classList.remove('active'));
+                dot.classList.add('active');
+                selectedColor = hex;
+            };
+            picker.appendChild(dot);
+        });
+
+        function exportLoveCard() {
+            const char = charSelect.value;
+            const msg = document.getElementById('msgInput').value || "Mãi yêu em!";
+            
+            // Nội dung file HTML thiệp động
+            const finalCode = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gửi ${char} ❤️</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #text { position: absolute; z-index: 10; color: #fff; font-size: 110px; font-weight: bold; font-family: 'Times New Roman', serif; text-shadow: 0 0 25px ${selectedColor}, 0 0 50px ${selectedColor}; pointer-events: none; }
+        #message { position: absolute; bottom: 12%; z-index: 15; color: white; font-size: 20px; text-align: center; width: 85%; line-height: 1.5; font-weight: bold; text-shadow: 0 0 10px rgba(0,0,0,1), 0 0 5px ${selectedColor}; }
+    </style>
+</head>
+<body>
+    <div id="text">${char}</div>
+    <div id="message">${msg.replace(/\n/g, '<br>')}</div>
+    <canvas id="heartCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+
+        let particles = [];
+        let bgHearts = [];
+
+        function heartMath(t) {
+            return { x: 16 * Math.pow(Math.sin(t), 3), y: -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) };
+        }
+
+        // Khởi tạo hạt trái tim chính
+        for(let i=0; i<180; i++) {
+            particles.push({ t: Math.random() * Math.PI * 2, speed: Math.random() * 0.015 + 0.005, size: Math.random() * 2 + 1 });
+        }
+
+        // Khởi tạo trái tim nền bay lên
+        for(let i=0; i<40; i++) {
+            bgHearts.push({ x: Math.random() * w, y: Math.random() * h + h, s: Math.random() * 10 + 5, v: Math.random() * 1 + 0.5 });
+        }
+
+        function draw() {
+            ctx.fillStyle = "rgba(0,0,0,0.12)";
+            ctx.fillRect(0, 0, w, h);
+
+            // Vẽ nền bay
+            bgHearts.forEach(p => {
+                p.y -= p.v;
+                if(p.y < -30) p.y = h + 30;
+                ctx.fillStyle = "rgba(255, 182, 193, 0.2)";
+                ctx.font = p.s + "px Arial";
+                ctx.fillText("❤️", p.x, p.y);
+            });
+
+            // Vẽ trái tim chính
+            ctx.fillStyle = "${selectedColor}";
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "${selectedColor}";
+            const pulse = 14 + Math.sin(Date.now() * 0.003) * 1.5;
+
+            particles.forEach(p => {
+                p.t += p.speed;
+                const pos = heartMath(p.t);
+                ctx.beginPath();
+                ctx.arc(pos.x * pulse + w/2, pos.y * pulse + h/2, p.size, 0, 7);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize', () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; });
+        draw();
+    <\/script>
+</body>
+</html>`;
+
+            const blob = new Blob(["\ufeff", finalCode], { type: 'text/html;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Gui_Nguoi_Yeu_${char}.html`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
